@@ -1,7 +1,9 @@
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using BepuPhysics;
 using BepuPhysics.Collidables;
 using BepuPhysics.Constraints;
+using BepuPhysics.Trees;
 using BepuUtilities;
 using BepuUtilities.Memory;
 using ConsoleRenderer;
@@ -14,9 +16,12 @@ public class Render
   Simulation Sim;
   ConsoleCanvas Canvas;
 
+  StaticHandle sh;
+
   public void Init()
   {
-    Canvas = new ConsoleCanvas().CreateBorder();
+    Canvas = new ConsoleCanvas();
+    InitSimulation();
   }
 
   // NOTE: I'm basically sifting through RayCastingDemo.cs from Bepu Demos to cobble something together
@@ -35,10 +40,6 @@ public class Render
     var randomizationSpan = (spacing - new Vector3(1)) * randomizationSubset;
     var randomizationBase = randomizationSpan * -0.5f;
 
-    // no idea
-    var r = new Vector3(random.NextSingle(), random.NextSingle(), random.NextSingle());
-    var location = spacing * (new Vector3(5, 5, 5) + new Vector3(-width, -height, -length) * 0.5f) + randomizationBase + r * randomizationSpan;
-
     var sphere = new Sphere(0.5f);
     var sphereIndex = Sim.Shapes.Add(sphere);
 
@@ -50,16 +51,90 @@ public class Render
     orientation.W = 0.01f + random.NextSingle();
     QuaternionEx.Normalize(ref orientation);
 
-    Sim.Statics.Add(new StaticDescription(location, orientation, sphereIndex));
+    sh = Sim.Statics.Add(new StaticDescription(new Vector3(500,500,0), orientation, sphereIndex));
   }
 
-  public void RenderFrame()
+  public void Test_Checkerboard()
   {
+    for (int row = 1; row < Canvas.Width - 1; row++)
+    {
+      for (int col = 1; col < Canvas.Height - 1; col++)
+      {
+        var bg = ConsoleColor.Black;
+        var fg = ConsoleColor.White;
+        if (row % 2 == 0)
+        {
+          bg = ConsoleColor.White;
+          fg = ConsoleColor.Black;
+        }
+        Canvas.Set(row, col, '#', fg, bg);
+      }
+    }
     Canvas.Render();
   }
 
+  // Most of this is copied from BepuPhysics' source code
   public void CameraRaycast()
   {
+    var hitHandler = default(RayHitHandler);
+    hitHandler.T = float.MaxValue;
+    var origin = new Vector3(0, 0, 0);
 
+    Console.WriteLine($"statichandle: object at {Sim.Statics[sh].BoundingBox}");
+
+    for (int row = 1; row < Canvas.Width - 1; row++)
+    {
+      for (int col = 1; col < Canvas.Height - 1; col++)
+      {
+        var directionRay = new Vector3(row - (Canvas.Width / 2), col - (Canvas.Height / 2), origin.Z);
+        Sim.RayCast(origin, directionRay, float.MaxValue, ref hitHandler);
+        // Console.WriteLine($"ray cast from {origin} towards {directionRay}");
+        if (hitHandler.T < float.MaxValue)
+        {
+          Console.WriteLine($"Ray for cell {row}|{col} hit something (distance {hitHandler.T})");
+          // Canvas.Set(row, col, '#');
+        }
+      }
+    }
+    // Canvas.Render();
   }
 }
+
+struct RayHitHandler : IRayHitHandler
+{
+  public float T;
+  public CollidableReference HitCollidable;
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public bool AllowTest(CollidableReference collidable)
+  {
+    return true;
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public bool AllowTest(CollidableReference collidable, int childIndex)
+  {
+    return true;
+  }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public void OnRayHit(in RayData ray, ref float maximumT, float t, Vector3 normal, CollidableReference collidable, int childIndex)
+  {
+    //We are only interested in the earliest hit. This callback is executing within the traversal, so modifying maximumT informs the traversal
+    //that it can skip any AABBs which are more distant than the new maximumT.
+    maximumT = t;
+    //Cache the earliest impact.
+    T = t;
+    HitCollidable = collidable;
+  }
+
+  public void OnRayHit(in RayData ray, ref float maximumT, float t, in Vector3 normal, CollidableReference collidable, int childIndex)
+  {
+    //We are only interested in the earliest hit. This callback is executing within the traversal, so modifying maximumT informs the traversal
+    //that it can skip any AABBs which are more distant than the new maximumT.
+    maximumT = t;
+    //Cache the earliest impact.
+    T = t;
+    HitCollidable = collidable;
+  }
+}
+

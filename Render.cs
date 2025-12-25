@@ -2,101 +2,67 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using BepuPhysics;
 using BepuPhysics.Collidables;
-using BepuPhysics.Constraints;
 using BepuPhysics.Trees;
-using BepuUtilities;
 using BepuUtilities.Memory;
 using ConsoleRenderer;
-using term3d.Objects.simulation;
 
 namespace term3d;
 
 public class Render
 {
-  Simulation Sim;
-  ConsoleCanvas Canvas;
+  Simulation Sim = Simulation.Create(new BufferPool(), new NarrowPhaseCallbacks(), new PoseIntegratorCallbacks(new Vector3(0, -10, 0)), new SolveDescription(8, 1));
+  ConsoleCanvas Canvas = new ConsoleCanvas();
 
+  BodyHandle bh;
   StaticHandle sh;
 
+  RayHitHandler hitHandler;
   public void Init()
   {
-    Canvas = new ConsoleCanvas();
+    hitHandler = default(RayHitHandler);
+    hitHandler.T = float.MaxValue;
     InitSimulation();
   }
 
   // NOTE: I'm basically sifting through RayCastingDemo.cs from Bepu Demos to cobble something together
   private void InitSimulation()
   {
-    Sim = Simulation.Create(new BufferPool(), new DemoNarrowPhaseCallbacks(new SpringSettings(30, 1)), new DemoPoseIntegratorCallbacks(new Vector3(0, -10, 0)), new SolveDescription(8, 1));
+    //Drop a ball on a big static box.
+    var unitCube = new Box(1,1,1);
+    var cubeInertia = unitCube.ComputeInertia(1);
+    bh = Sim.Bodies.Add(BodyDescription.CreateDynamic(new Vector3(0, 1, 0), cubeInertia, Sim.Shapes.Add(unitCube), 0.01f));
 
-    // idk what half of this does half as well as I should
-    var random = new Random(5);
-    const int width = 16;
-    const int height = 16;
-    const int length = 16;
-    var spacing = new Vector3(2.01f);
-    var halfSpacing = spacing / 2;
-    float randomizationSubset = 0.9f;
-    var randomizationSpan = (spacing - new Vector3(1)) * randomizationSubset;
-    var randomizationBase = randomizationSpan * -0.5f;
-
-    var sphere = new Sphere(0.5f);
-    var sphereIndex = Sim.Shapes.Add(sphere);
-
-    // I guess I need to study up on my physics and higher maths <.< 
-    Quaternion orientation;
-    orientation.X = -1 + 2 * random.NextSingle();
-    orientation.Y = -1 + 2 * random.NextSingle();
-    orientation.Z = -1 + 2 * random.NextSingle();
-    orientation.W = 0.01f + random.NextSingle();
-    QuaternionEx.Normalize(ref orientation);
-
-    sh = Sim.Statics.Add(new StaticDescription(new Vector3(500,500,0), orientation, sphereIndex));
-  }
-
-  public void Test_Checkerboard()
-  {
-    for (int row = 1; row < Canvas.Width - 1; row++)
-    {
-      for (int col = 1; col < Canvas.Height - 1; col++)
-      {
-        var bg = ConsoleColor.Black;
-        var fg = ConsoleColor.White;
-        if (row % 2 == 0)
-        {
-          bg = ConsoleColor.White;
-          fg = ConsoleColor.Black;
-        }
-        Canvas.Set(row, col, '#', fg, bg);
-      }
-    }
-    Canvas.Render();
+    // sh = Sim.Statics.Add(new StaticDescription(new Vector3(5, 5, 0), Sim.Shapes.Add(new Box(5, 1, 5))));
   }
 
   // Most of this is copied from BepuPhysics' source code
-  public void CameraRaycast()
+  public void CameraRaycast((int x, int y, int z) loc)
   {
-    var hitHandler = default(RayHitHandler);
-    hitHandler.T = float.MaxValue;
-    var origin = new Vector3(0, 0, 0);
+    var origin = new Vector3(loc.x, loc.y, loc.z);
 
-    Console.WriteLine($"statichandle: object at {Sim.Statics[sh].BoundingBox}");
-
+    Canvas.Clear();
+    int hits = 0;
+    int maxhits = Canvas.Width * Canvas.Height;
     for (int row = 1; row < Canvas.Width - 1; row++)
     {
       for (int col = 1; col < Canvas.Height - 1; col++)
       {
-        var directionRay = new Vector3(row - (Canvas.Width / 2), col - (Canvas.Height / 2), origin.Z);
-        Sim.RayCast(origin, directionRay, float.MaxValue, ref hitHandler);
-        // Console.WriteLine($"ray cast from {origin} towards {directionRay}");
+        hitHandler.T = float.MaxValue; // TODO: make a better reset
+        var pixelDir = new Vector3(row - (Canvas.Width / 2f), col - (Canvas.Height / 2f), 0f);
+        Sim.RayCast(origin, Vector3.Normalize(pixelDir), 100, ref hitHandler); // NOTE: this is the only line AI actually helped me with
+        
+        Canvas.Text(0, 0, $"XYZ: {loc.x} {loc.y} {loc.z}");
+        Canvas.Text(0, 1, $"Origin: {origin}  |  directionRay: {pixelDir}");
+        Canvas.Text(0, 2, $"{hits} / {maxhits} rays hit object located at {Sim.Bodies[hitHandler.HitCollidable.BodyHandle].BoundingBox} (last distance {hitHandler.T})");
         if (hitHandler.T < float.MaxValue)
         {
-          Console.WriteLine($"Ray for cell {row}|{col} hit something (distance {hitHandler.T})");
-          // Canvas.Set(row, col, '#');
+          hits++;
+          Canvas.Set(row, col, '#');
         }
       }
     }
-    // Canvas.Render();
+    Canvas.Render();
+    Task.Delay(100); // TODO: move this - this is not where framerate/timing code belongs.
   }
 }
 

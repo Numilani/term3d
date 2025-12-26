@@ -9,8 +9,8 @@ public class Render(Simulation Sim)
 {
   readonly ConsoleCanvas Canvas = new();
 
-    // Most of this is copied from BepuPhysics' source code
-    public void CameraRaycast(Player player)
+  // Most of this is copied from BepuPhysics' source code
+  public void CameraRaycast(Camera player)
   {
     RayHitHandler hitHandler;
     hitHandler = default;
@@ -26,12 +26,9 @@ public class Render(Simulation Sim)
       for (int col = 1; col < Canvas.Height - 1; col++)
       {
         // reset hit handler
-        hitHandler.T = float.MaxValue; 
+        hitHandler.T = float.MaxValue;
 
-        var visionRay = new Vector3(
-            player.Location.X + (row - (Canvas.Width / 2f)),
-            player.Location.Y + (col - (Canvas.Height / 2f)),
-            player.Location.Z + 0f);
+        var visionRay = new Vector3((row - (Canvas.Width / 2f)), (col - (Canvas.Height / 2f)), 0f) + player.Forward;
         Sim.RayCast(player.Location, Vector3.Normalize(visionRay), float.MaxValue, ref hitHandler); // NOTE: this is the only line AI actually helped me with because I didn't know that vector normalization was needeed
 
         Canvas.Text(0, 0, $"XYZ: {player.Location.X} {player.Location.Y} {player.Location.Z}");
@@ -41,7 +38,8 @@ public class Render(Simulation Sim)
           hits++;
           Canvas.Set(row, col, '#');
         }
-        if (row == (Canvas.Width - 1) / 2 && col == (Canvas.Height - 1) / 2){
+        if (row == (Canvas.Width - 1) / 2 && col == (Canvas.Height - 1) / 2)
+        {
           Canvas.Text(0, 1, $"Origin: {player.Location}  |  directionRay: {visionRay}");
           Canvas.Set(row, col, 'X', ConsoleColor.DarkRed);
         }
@@ -50,6 +48,3 @@ public class Render(Simulation Sim)
     Canvas.Render();
   }
 }
-
-
-

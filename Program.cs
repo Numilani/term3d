@@ -11,7 +11,7 @@ internal class Program
   private static void Main(string[] args)
   {
     var r = new Render(InitSimulation());
-    var player = new Player()
+    var player = new Camera()
     {
       Location = new Vector3(0, 0, 0)
     };
@@ -35,10 +35,10 @@ internal class Program
       switch (keyInfo.Key)
       {
         case ConsoleKey.W:
-          player.Location = Vector3.Round(player.Location + new Vector3(0, 0, 0.10f), 2);
+          player.Location = Vector3.Round(player.Location + new Vector3(0, 0.10f, 0), 2);
           break;
         case ConsoleKey.S:
-          player.Location = Vector3.Round(player.Location - new Vector3(0, 0, 0.10f), 2);
+          player.Location = Vector3.Round(player.Location - new Vector3(0, 0.10f, 0), 2);
           break;
         case ConsoleKey.A:
           player.Location = Vector3.Round(player.Location - new Vector3(0.10f, 0, 0), 2);
@@ -47,10 +47,13 @@ internal class Program
           player.Location = Vector3.Round(player.Location + new Vector3(0.10f, 0, 0), 2);
           break;
         case ConsoleKey.R:
-          player.Location = Vector3.Round(player.Location + new Vector3(0, 0.10f, 0), 2);
+          player.Location = Vector3.Round(player.Location + new Vector3(0, 0, 0.10f), 2);
           break;
         case ConsoleKey.F:
-          player.Location = Vector3.Round(player.Location - new Vector3(0, 0.10f, 0), 2);
+          player.Location = Vector3.Round(player.Location - new Vector3(0, 0, 0.10f), 2);
+          break;
+        case ConsoleKey.Q:
+          player.Yaw += 5f;
           break;
       }
     }

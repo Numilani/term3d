@@ -12,24 +12,37 @@ public class Camera
   public Vector3 Facing { get; set; }
 
   float yaw;
+  /// <summary>
+  /// Gets or sets the yaw of the camera as a value from -PI to PI. At 0, Forward is aligned with -z. At PI/2, Forward is aligned with +x. In other words, higher values turn right.
+  /// </summary>
   public float Yaw
   {
-    get => yaw;
+    get { return yaw; }
     set
     {
-      if (value > 180) yaw = value - 360f;
-      if (value < -180) yaw = value + 360f;
+      var revolution = (value + Math.PI) / (2 * Math.PI);
+      revolution -= Math.Floor(revolution);
+      yaw = (float)(revolution * (Math.PI * 2) - Math.PI);
     }
   }
-
   float pitch;
+  /// <summary>
+  /// Gets or sets the pitch of the camera, clamped to a value from -MaximumPitch to MaximumPitch. Higher values look downward, lower values look upward.
+  /// </summary>
   public float Pitch
   {
-    get => pitch;
-    set
-    {
-      pitch = Math.Clamp(value, -90f, 90f);
-    }
+    get { return pitch; }
+    set { pitch = Math.Clamp(value, -maximumPitch, maximumPitch); }
+  }
+
+  float maximumPitch = (float)Math.PI / 2;
+  /// <summary>
+  /// Gets or sets the maximum pitch of the camera, a value from 0 to PI / 2.
+  /// </summary>
+  public float MaximumPitch
+  {
+    get { return maximumPitch; }
+    set { maximumPitch = (float)Math.Clamp(value, 0, Math.PI / 2); }
   }
 
 

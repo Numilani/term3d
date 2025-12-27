@@ -16,8 +16,9 @@ internal class Program
       Location = new Vector3(0, 0, 0)
     };
 
+    bool keepRunning = true;
     // main loop
-    while (true)
+    while (keepRunning)
     {
       if (Console.KeyAvailable)
       {
@@ -28,6 +29,9 @@ internal class Program
         r.CameraRaycast(player);
       }
     }
+
+    r.Cleanup();
+    Thread.Sleep(100);
 
     void ReadKey()
     {
@@ -52,9 +56,24 @@ internal class Program
         case ConsoleKey.F:
           player.Location = Vector3.Round(player.Location - new Vector3(0, 0, 0.10f), 2);
           break;
-        case ConsoleKey.Q:
-          player.Yaw += 5f;
+        case ConsoleKey.I:
+          // player.Pitch = MathF.Round((player.Pitch + 0.0157f) * 10000f) / 10000f;
+          player.Pitch = player.Pitch + 0.0157f;
           break;
+        case ConsoleKey.K:
+          // player.Pitch = MathF.Round((player.Pitch - 0.0157f) * 10000f) / 10000f;
+          player.Pitch = player.Pitch - 0.0157f;
+          break;
+        case ConsoleKey.J:
+          player.Yaw = MathF.Round((player.Yaw - 0.314f) * 10000f) / 10000f;
+          break;
+        case ConsoleKey.L:
+          player.Yaw = MathF.Round((player.Yaw + 0.314f) * 10000f) / 10000f;
+          break;
+        case ConsoleKey.X:
+          keepRunning = false;
+          break;
+
       }
     }
   }

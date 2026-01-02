@@ -12,11 +12,10 @@ public class Render(Simulation Sim)
   // Most of this is copied from BepuPhysics' source code
   public void CameraRaycast(Camera player)
   {
+    Canvas.Clear();
     RayHitHandler hitHandler;
     hitHandler = default;
     hitHandler.T = float.MaxValue;
-
-    Canvas.Clear();
 
     int hits = 0;
     int maxhits = Canvas.Width * Canvas.Height;
@@ -29,10 +28,8 @@ public class Render(Simulation Sim)
         hitHandler.T = float.MaxValue;
 
         var location = new Vector3(row - (Canvas.Width / 2f), col - (Canvas.Height / 2f), 0f);
-        location = Vector3.Normalize(location);
-
-        var worldRay = Vector3.Transform(location, player.OrientationQuaternion);
-
+        location = Vector3.Transform(location, player.OrientationQuaternion);
+        var worldRay = Vector3.Normalize(location);
 
         Sim.RayCast(player.Location, worldRay, float.MaxValue, ref hitHandler); // NOTE: this is the only line AI actually helped me with because I didn't know that vector normalization was needeed
 

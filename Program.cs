@@ -23,11 +23,11 @@ internal class Program
       if (Console.KeyAvailable)
       {
         ReadKey();
-        r.RenderFrame(player);
       }
       else
       {
-        // r.CameraRaycast(player);
+        // r.RenderOrtho(player);
+        r.RenderPerspective(player);
       }
     }
 

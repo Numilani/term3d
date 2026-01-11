@@ -1,5 +1,6 @@
 using System.Numerics;
 using BepuPhysics;
+using BepuUtilities;
 using ConsoleRenderer;
 using term3d.Objects;
 
@@ -45,9 +46,10 @@ public class Renderer(Simulation Sim)
     if (!debug) Canvas.Render();
   }
 
-  public void RenderPerspective(Camera player, bool debug = false)
+  public void RenderPerspective(Camera player)
   {
-    if (!debug) Canvas.Clear();
+    Canvas.Clear();
+
     RayHitHandler hitHandler;
     hitHandler = default;
     hitHandler.T = float.MaxValue;
@@ -61,11 +63,18 @@ public class Renderer(Simulation Sim)
       {
         hitHandler.T = float.MaxValue;
 
+        var dirX = (float)sx / Canvas.Width * 2 - 1;
+        var dirY = (float)sy / Canvas.Height * 2 - 1;
+
+        // dirX *= (float)Canvas.Width / Canvas.Height;
+
         var direction = new Vector3(
-            ((float)sx / Canvas.Width) * 2 - 1,
-            ((float)sy / Canvas.Height) * 2 - 1,
+            dirX,
+            -dirY,
             0.5f // the focus distance - how far away from "the camera" is the "imaginary screen"
             );
+
+        direction = Vector3.Transform(direction, Matrix4x4.CreateFromQuaternion(player.OrientationQuaternion));
 
         Sim.RayCast(
             player.Location, // From the player point
@@ -76,16 +85,15 @@ public class Renderer(Simulation Sim)
 
         if (hitHandler.T < float.MaxValue)
         {
-          if (debug) Console.WriteLine($"ray originating from {player.Location} through pixel [{sx}, {sy}] hit object at {Sim.Bodies[hitHandler.HitCollidable.BodyHandle].BoundingBox}");
-          if (!debug) Canvas.Set(sx, sy, '#');
+          Canvas.Set(sx, sy, '#');
           counter++;
         }
       }
     }
     // END PERSPECTIVE LOGIC
 
-    if (debug) Console.WriteLine($"hits: {counter} / {Canvas.Height * Canvas.Width}");
-    if (!debug) Canvas.Render();
+    Canvas.Text(0,0, $"Location: {player.Location}");
+    Canvas.Render();
   }
 
   public void Cleanup()

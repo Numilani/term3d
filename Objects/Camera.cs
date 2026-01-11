@@ -96,22 +96,17 @@ public class Camera
   /// Gets the down direction of the camera. Equivalent to transforming (0,-1,0) by Orientation.
   /// </summary>
   public Vector3 Down => -Up;
-  /// <summary>
-  /// Gets the backward direction of the camera. Equivalent to transforming (0,0,1) by Orientation.
-  /// </summary>
-  public Vector3 Backward
+
+  public Vector3 Forward
   {
     get
     {
       var orientation = OrientationQuaternion;
-      QuaternionEx.TransformUnitZ(orientation, out var backward);
-      return backward;
+      QuaternionEx.TransformUnitZ(orientation, out var forward);
+      return forward;
     }
   }
-  /// <summary>
-  /// Gets the forward direction of the camera. Equivalent to transforming (0,0,-1) by Orientation.
-  /// </summary>
-  public Vector3 Forward => -Backward;
+  public Vector3 Backward => -Forward;
 
 
 

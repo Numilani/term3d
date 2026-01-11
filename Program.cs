@@ -4,10 +4,12 @@ using BepuPhysics.Collidables;
 using BepuUtilities.Memory;
 using term3d;
 using term3d.Objects;
-using term3d.Extensions;
 
 internal class Program
 {
+
+  // public List<MapStaticsData> StaticsData {get;set;}
+
   private static void Main(string[] args)
   {
     var r = new Renderer(InitSimulation());
@@ -39,37 +41,36 @@ internal class Program
       var keyInfo = Console.ReadKey(true);
       switch (keyInfo.Key)
       {
-        case ConsoleKey.R:
-          player.Location = Vector3.Round(player.Location + new Vector3(0, 1f, 0), 2);
-          break;
-        case ConsoleKey.F:
-          player.Location = Vector3.Round(player.Location - new Vector3(0, 1f, 0), 2);
-          break;
-        case ConsoleKey.A:
-          player.Location = Vector3.Round(player.Location - new Vector3(1f, 0, 0), 2);
-          break;
-        case ConsoleKey.D:
-          player.Location = Vector3.Round(player.Location + new Vector3(1f, 0, 0), 2);
-          break;
         case ConsoleKey.W:
-          player.Location = Vector3.Round(player.Location + new Vector3(0, 0, 1f), 2);
+          player.Location = Vector3.Round(Vector3.Add(player.Location, player.Forward));
           break;
         case ConsoleKey.S:
-          player.Location = Vector3.Round(player.Location - new Vector3(0, 0, 1f), 2);
+          player.Location = Vector3.Round(Vector3.Add(player.Location, player.Backward));
           break;
+        case ConsoleKey.A:
+          player.Location = Vector3.Round(Vector3.Add(player.Location, player.Left));
+          break;
+        case ConsoleKey.D:
+          player.Location = Vector3.Round(Vector3.Add(player.Location, player.Right));
+          break;
+        case ConsoleKey.R:
+          player.Location = Vector3.Round(Vector3.Add(player.Location, player.Up));
+          break;
+        case ConsoleKey.F:
+          player.Location = Vector3.Round(Vector3.Add(player.Location, player.Down));
+          break;
+
         case ConsoleKey.I:
-          // player.Pitch = MathF.Round((player.Pitch + 0.0157f) * 10000f) / 10000f;
-          player.Pitch = player.Pitch + 0.0157f;
+          player.Pitch = player.Pitch + (float)Math.PI / 8 * 10000f / 10000f;
           break;
         case ConsoleKey.K:
-          // player.Pitch = MathF.Round((player.Pitch - 0.0157f) * 10000f) / 10000f;
-          player.Pitch = player.Pitch - 0.0157f;
+          player.Pitch = player.Pitch - (float)Math.PI / 8 * 10000f / 10000f;
           break;
         case ConsoleKey.J:
-          player.Yaw = MathF.Round((player.Yaw - 0.314f) * 10000f) / 10000f;
+          player.Yaw = MathF.Round((player.Yaw + ((float)Math.PI / 4)) * 10000f) / 10000f;
           break;
         case ConsoleKey.L:
-          player.Yaw = MathF.Round((player.Yaw + 0.314f) * 10000f) / 10000f;
+          player.Yaw = MathF.Round((player.Yaw - ((float)Math.PI / 4)) * 10000f) / 10000f;
           break;
         case ConsoleKey.X:
           keepRunning = false;
@@ -85,7 +86,7 @@ internal class Program
     var unitCube = new Box(3, 3, 3);
     var cubeInertia = unitCube.ComputeInertia(1);
     // bh = Sim.Bodies.Add(BodyDescription.CreateDynamic(new Vector3(0, 1, 0), cubeInertia, Sim.Shapes.Add(unitCube), 0.01f));
-    Sim.Bodies.Add(BodyDescription.CreateDynamic(new Vector3(0, 0, 20), cubeInertia, Sim.Shapes.Add(unitCube), 0.01f));
+    Sim.Bodies.Add(BodyDescription.CreateDynamic(new Vector3(0, 0, 10), cubeInertia, Sim.Shapes.Add(unitCube), 0.01f));
 
     // sh = Sim.Statics.Add(new StaticDescription(new Vector3(5, 5, 0), Sim.Shapes.Add(new Box(5, 1, 5))));
 

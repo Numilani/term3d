@@ -8,77 +8,77 @@ using term3d.Objects;
 internal class Program
 {
 
-  // public List<MapStaticsData> StaticsData {get;set;}
-
   private static void Main(string[] args)
   {
-    var r = new Renderer(InitSimulation());
-    var player = new Camera()
-    {
-      Location = new Vector3(0, 0, 0)
-    };
+    var state = new SessionState();
+    state.LoadedLevel = InitSimulation();
+    state.Player = new Camera(){Location = new Vector3(0,0,0)};
+    state.Status = RunState.RUNNING;
+
+    var r = new Renderer(state.LoadedLevel);
 
     bool keepRunning = true;
     // main loop
-    while (keepRunning)
+    while (state.Status == RunState.RUNNING)
     {
       if (Console.KeyAvailable)
       {
-        ReadKey();
+        ReadKey(state, Console.ReadKey(true));
       }
       else
       {
         // r.RenderOrtho(player);
-        r.RenderPerspective(player);
+        r.RenderPerspective(state.Player);
       }
     }
 
     r.Cleanup();
     Thread.Sleep(100);
 
-    void ReadKey()
+  }
+
+  static void ReadKey(SessionState state, ConsoleKeyInfo key)
+  {
+    switch (key.Key)
     {
-      var keyInfo = Console.ReadKey(true);
-      switch (keyInfo.Key)
-      {
-        case ConsoleKey.W:
-          player.Location = Vector3.Round(Vector3.Add(player.Location, player.Forward));
-          break;
-        case ConsoleKey.S:
-          player.Location = Vector3.Round(Vector3.Add(player.Location, player.Backward));
-          break;
-        case ConsoleKey.A:
-          player.Location = Vector3.Round(Vector3.Add(player.Location, player.Left));
-          break;
-        case ConsoleKey.D:
-          player.Location = Vector3.Round(Vector3.Add(player.Location, player.Right));
-          break;
-        case ConsoleKey.R:
-          player.Location = Vector3.Round(Vector3.Add(player.Location, player.Up));
-          break;
-        case ConsoleKey.F:
-          player.Location = Vector3.Round(Vector3.Add(player.Location, player.Down));
-          break;
+      case ConsoleKey.W:
+        state.Player.Location = Vector3.Round(Vector3.Add(state.Player.Location, state.Player.Forward));
+        break;
+      case ConsoleKey.S:
+        state.Player.Location = Vector3.Round(Vector3.Add(state.Player.Location, state.Player.Backward));
+        break;
+      case ConsoleKey.A:
+        state.Player.Location = Vector3.Round(Vector3.Add(state.Player.Location, state.Player.Left));
+        break;
+      case ConsoleKey.D:
+        state.Player.Location = Vector3.Round(Vector3.Add(state.Player.Location, state.Player.Right));
+        break;
+      case ConsoleKey.R:
+        state.Player.Location = Vector3.Round(Vector3.Add(state.Player.Location, state.Player.Up));
+        break;
+      case ConsoleKey.F:
+        state.Player.Location = Vector3.Round(Vector3.Add(state.Player.Location, state.Player.Down));
+        break;
 
-        case ConsoleKey.I:
-          player.Pitch = player.Pitch + (float)Math.PI / 8 * 10000f / 10000f;
-          break;
-        case ConsoleKey.K:
-          player.Pitch = player.Pitch - (float)Math.PI / 8 * 10000f / 10000f;
-          break;
-        case ConsoleKey.J:
-          player.Yaw = MathF.Round((player.Yaw + ((float)Math.PI / 4)) * 10000f) / 10000f;
-          break;
-        case ConsoleKey.L:
-          player.Yaw = MathF.Round((player.Yaw - ((float)Math.PI / 4)) * 10000f) / 10000f;
-          break;
-        case ConsoleKey.X:
-          keepRunning = false;
-          break;
+      case ConsoleKey.I:
+        state.Player.Pitch = state.Player.Pitch + (float)Math.PI / 8 * 10000f / 10000f;
+        break;
+      case ConsoleKey.K:
+        state.Player.Pitch = state.Player.Pitch - (float)Math.PI / 8 * 10000f / 10000f;
+        break;
+      case ConsoleKey.J:
+        state.Player.Yaw = MathF.Round((state.Player.Yaw + ((float)Math.PI / 4)) * 10000f) / 10000f;
+        break;
+      case ConsoleKey.L:
+        state.Player.Yaw = MathF.Round((state.Player.Yaw - ((float)Math.PI / 4)) * 10000f) / 10000f;
+        break;
+      case ConsoleKey.X:
+        state.Status = RunState.EXIT_REQUESTED;
+        break;
 
-      }
     }
   }
+
 
   private static Simulation InitSimulation()
   {
@@ -92,4 +92,11 @@ internal class Program
 
     return Sim;
   }
+}
+
+public enum RunState
+{
+  RUNNING,
+  PAUSED,
+  EXIT_REQUESTED
 }
